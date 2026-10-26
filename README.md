@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # PulseChat
 
 A modern real-time chat application built with **Node.js, Express.js and Socket.IO**. PulseChat supports public channels, private direct messaging, private groups, real-time presence, typing indicators, message history and a responsive chat interface.
@@ -48,11 +49,351 @@ Users can join channels and exchange messages in real time.
 - Automatic history replay when joining a channel
 
 ### ✍️ Typing Indicators
+=======
+# PulseChat — Production Full-Stack Real-Time Messaging Platform
+
+> A resilient, high-performance real-time communication platform crafted with **React 18, TypeScript, Node.js, Express, Socket.IO, and MongoDB**, styled with the **Slate & Arctic Cyan** visual identity system.
+
+---
+
+## ✦ Table of Contents
+1. [Project Overview](#1-project-overview)
+2. [Visual Identity & Design System: Slate & Arctic Cyan](#2-visual-identity--design-system-slate--arctic-cyan)
+3. [Architecture Overview & Diagram](#3-architecture-overview--diagram)
+4. [Technology Stack](#4-technology-stack)
+5. [Key Features & Capabilities](#5-key-features--capabilities)
+6. [Persistent Avatar & Profile Picture System](#6-persistent-avatar--profile-picture-system)
+7. [Chatterly AI Conversational Workspace](#7-chatterly-ai-conversational-workspace)
+8. [Conversation Details: Media, Links & Docs](#8-conversation-details-media-links--docs)
+9. [Dedicated Full-Page Settings](#9-dedicated-full-page-settings)
+10. [Socket.IO Real-Time Event Protocol](#10-socketio-real-time-event-protocol)
+11. [HTTP REST API Reference](#11-http-rest-api-reference)
+12. [Local Development & Setup Guide](#12-local-development--setup-guide)
+13. [Testing & Quality Verification](#13-testing--quality-verification)
+14. [Security & Privacy Architecture](#14-security--privacy-architecture)
+
+---
+
+## 1. Project Overview
+
+**PulseChat** is a production-quality, resume-worthy real-time messaging application designed for engineering teams, communities, and modern workplaces. It solves distributed state coordination, durable message persistence, granular room authorization, and rich editorial user experiences:
+
+- **Durable Persistence**: All user accounts, public channels, direct messages, private groups, message revisions, emoji reactions, conversation media, and AI summaries persist in MongoDB.
+- **Genuine Account Authentication**: Robust bcrypt password hashing (10 salt rounds), JSON Web Tokens (JWT) in secure HTTP-only cookies and bearer headers, input validation via Zod schemas, and rate-limited auth endpoints.
+- **True Multi-Device Real-Time Synchronization**: Room authorization enforced server-side. Socket connections map to user identity, supporting multi-tab and multi-device synchronization without identity clashes.
+- **Slate & Arctic Cyan Visual Direction**: A cohesive, professional, gender-neutral aesthetic supporting dark and light themes with zero-flash persistence and WCAG 2.2 AA compliant contrast.
+
+---
+
+## 2. Visual Identity & Design System: Slate & Arctic Cyan
+
+PulseChat implements a cohesive **Slate & Arctic Cyan** design system:
+
+### Core Color Palette
+| Color Name | Hex Code | Intended Usage |
+| :--- | :---: | :--- |
+| **Deep Slate** | `#242B35` | Primary dark background, typography on light theme, deep surfaces |
+| **Steel Blue** | `#364353` | Sidebars, incoming message bubbles in dark mode, elevated surfaces |
+| **Muted Slate** | `#627487` | Secondary text, inactive tab borders, subdued controls |
+| **Arctic Cyan** | `#55A9C7` | Active icons, accents, brand highlights, hover states |
+| **Strong Cyan** | `#287F9F` | Outgoing message bubbles, primary action buttons, links |
+| **Ice Grey** | `#E3EAF0` | Light theme dividers, incoming message bubbles in light mode |
+| **Cloud White** | `#F7F9FB` | Light theme main background, card surfaces |
+
+### Light & Dark Themes
+- **Light Theme**: Cloud White (`#F7F9FB`) application background, Ice Grey (`#E3EAF0`) message bubbles and dividers, Deep Slate (`#242B35`) primary text, Strong Cyan (`#287F9F`) for buttons, and Arctic Cyan (`#55A9C7`) for accents.
+- **Dark Theme**: Deep Slate (`#242B35`) main canvas, Steel Blue (`#364353`) sidebars and panels, light accessible text, and Arctic Cyan highlights.
+- **Zero-Flash Persistence**: Active theme is stored in `localStorage` and automatically syncs with system preferences (`prefers-color-scheme`).
+
+---
+
+## 3. Architecture Overview & Diagram
+
+```mermaid
+flowchart TD
+    subgraph Client ["Frontend Client (React 18 + Vite + TS)"]
+        UI["UI Layer (Slate & Arctic Cyan Design Tokens)"]
+        Router["App & Route System (/settings, /)"]
+        AuthCtx["Auth Context (JWT / State)"]
+        SocketCtx["Socket.IO Client Layer"]
+        QueryClient["TanStack React Query Cache"]
+        AIWorkspace["Chatterly AI Conversational Workspace"]
+        DetailsPanel["Context Panel (Media, Links & Docs)"]
+    end
+
+    subgraph Server ["Backend Server (Node.js + Express + TS)"]
+        HTTPGateway["Express API Gateway & Rate Limiters"]
+        AuthMiddleware["JWT Authentication & RBAC Middleware"]
+        SocketGateway["Socket.IO Server (Auth Handshake & Broadcasts)"]
+        
+        subgraph Controllers ["Controllers & Business Logic"]
+            AuthController["Auth Controller"]
+            ConvController["Conversation Controller (Media/Links/Docs)"]
+            MsgController["Message Controller"]
+            AIController["Chatterly AI Intelligence Controller"]
+            UserController["User Profile & Avatar Controller"]
+        end
+    end
+
+    subgraph Storage ["Durable Persistence & Object Storage"]
+        MongoDB[("MongoDB 7.0+\nMongoose ODM\n(Users, Convs, Messages, Attachments)")]
+        DiskStorage[("Static Uploads\n/uploads (Avatars & Files)")]
+    end
+
+    UI --> Router
+    Router --> AuthCtx
+    Router --> SocketCtx
+    AuthCtx --> HTTPGateway
+    QueryClient --> HTTPGateway
+    SocketCtx <-->|WebSocket Stream\n(chat:send, user:profile_updated)| SocketGateway
+
+    HTTPGateway --> AuthMiddleware
+    AuthMiddleware --> AuthController
+    AuthMiddleware --> ConvController
+    AuthMiddleware --> MsgController
+    AuthMiddleware --> AIController
+    AuthMiddleware --> UserController
+
+    AuthController --> MongoDB
+    ConvController --> MongoDB
+    MsgController --> MongoDB
+    UserController --> MongoDB
+    HTTPGateway --> DiskStorage
+    SocketGateway <--> MongoDB
+```
+
+---
+
+## 4. Technology Stack
+
+### Frontend Architecture
+- **Framework**: React 18, Vite 6, TypeScript 5 (Strict Mode)
+- **State Management**: TanStack React Query 5 (Server State, Caching) & React Context (Auth, Theme, Socket)
+- **Real-Time Client**: Socket.IO Client 4.8
+- **HTTP Client**: Axios with automatic request interception and error handling
+- **Icons**: Lucide React
+- **Design Tokens**: Pure Vanilla CSS Custom Properties (Zero runtime CSS-in-JS overhead)
+- **Testing**: Vitest, React Testing Library, JSDOM
+
+### Backend Architecture
+- **Runtime**: Node.js 20+, Express 4/5, TypeScript 5
+- **Database & ODM**: MongoDB 7.0+, Mongoose 8
+- **Real-Time Engine**: Socket.IO 4.8 with authenticated connection handshake
+- **Authentication**: bcryptjs (Password hashing), JSON Web Tokens (JWT)
+- **Validation**: Zod schema validation
+- **Security & Reliability**: Helmet, express-rate-limit, cookie-parser, multer
+- **Structured Logging**: Pino with pino-pretty
+- **Testing**: Vitest, Supertest
+
+---
+
+## 5. Key Features & Capabilities
+
+### 🔒 1. Authentic Authentication & User Management
+- Dedicated, polished Sign In and Create Account screens (no developer-facing copy).
+- Passwords hashed using bcrypt with salt rounds; password visibility toggles.
+- Real-time profile synchronization across active client sessions.
+
+### 💬 2. Direct Messaging (1-on-1) & Contact Discovery
+- Search users by name or username across the platform.
+- Idempotent conversation generation preventing duplicate 1-on-1 direct conversations.
+- Real-time online/offline presence indicators.
+
+### 👥 3. Persistent Channels & Private Groups
+- Pre-seeded persistent public channels: `#general`, `#developers`, `#gaming`, `#random`.
+- Create private group conversations with description and member checklists.
+- 6-character uppercase invitation codes with instant copy button.
+- Join private groups seamlessly via code (`/api/conversations/join`).
+- Role-based permissions (Owner, Admin, Member).
+
+### ✉️ 4. Rich Messaging Timeline & Composer
+- Outgoing message bubbles in Strong Cyan (`#287F9F`) with white text and delivery indicators (`✓✓`).
+- Incoming message bubbles in Ice Grey / Steel Blue with Deep Slate text.
+- Message editing and soft deletion (`isDeleted` tombstone preserving conversation flow).
+- Reply-to-message quotation banners.
+- Emoji reactions with count pills and tooltip attribution.
+- Message attachments: images with inline previews, documents/PDFs with download cards.
+- Cursor-based message history pagination ("Load older messages").
+- In-conversation text search.
+
+---
+
+## 6. Persistent Avatar & Profile Picture System
+
+PulseChat features a universal, persistent avatar system:
+
+1. **Uploaded Picture Display**: Whenever a user has uploaded a profile picture, their photo is displayed consistently everywhere.
+2. **Dynamic Initial Fallback**: When no picture exists, an initial dynamically derived from their display name (e.g., Jui Tawde ➔ `J`, Rahul Sharma ➔ `R`) is rendered in a circular container with Slate & Arctic Cyan styling.
+3. **Graceful Error Handling**: If an image fails to load, `onError` automatically falls back to the dynamic initial. The image and initial are **never** shown simultaneously.
+4. **Settings Profile Management**:
+   - Upload JPEG, PNG, or WebP files up to 5MB from device.
+   - Real-time preview before saving.
+   - Instant replacement and one-click removal (reverts to initial).
+5. **Real-Time Propagation**: Updates broadcast via Socket.IO (`user:profile_updated`), instantly updating all open messages, participant rosters, and conversations across all connected clients without requiring a page reload.
+
+---
+
+## 7. Chatterly AI Conversational Workspace
+
+Chatterly AI is a first-class citizen in the main navigation sidebar:
+
+- **Dedicated Chat Workspace**: Open by clicking "Chatterly AI" in the primary navigation rail or sidebar.
+- **Intelligent Engineering Assistant**: Ask programming questions, debug code, discuss architectural patterns, and brainstorm features.
+- **Markdown Rendering**: Formatted headings, bullet points, inline code, and syntax-highlighted code blocks.
+- **Starter Prompts**: Quick prompt cards (e.g., "Explain WebSockets vs SSE", "Debug React re-renders", "Architecture advice").
+- **Interactive Actions**: One-click copy response, restart conversation session, and persistent chat history.
+- **Backend Model Integration**: Connects to Google Gemini 1.5 Flash when `GEMINI_API_KEY` is configured; automatically falls back to Chatterly's built-in engineering assistant engine if unconfigured.
+
+---
+
+## 8. Conversation Details: Media, Links & Docs
+
+Clicking the info icon on any channel, direct message, or group opens the WhatsApp-inspired conversation panel with 4 dedicated tabs:
+
+1. **Overview**: Channel description, invite code with copy action, mute notifications, archive channel, and member roster with uploaded avatars.
+2. **Media**: Thumbnail grid of real persisted images shared in that conversation. Clicking any image opens a full-resolution viewer modal.
+3. **Links**: Automatic extraction of all URLs shared in messages, displaying domain badge, sender, timestamp, copy link, and open link actions.
+4. **Docs**: File cards for uploaded documents and archives showing filename, format, size in KB/MB, upload date, and download button.
+
+---
+
+## 9. Dedicated Full-Page Settings
+
+> **Strict Architectural Rule**: Settings is a dedicated full page (`/settings`), **never** a modal or floating overlay.
+
+Sections included in `/settings`:
+- **Profile**: Display name, username, profile picture upload/preview/replace/remove.
+- **Appearance**: Light, Dark, or System theme toggle with live preview cards.
+- **Notifications**: Desktop notifications, sound effects, email digests.
+- **Privacy & Security**: Password change with current password verification, session security.
+- **Chat Preferences**: Enter-to-send toggle, compact message density, code snippets.
+- **Account**: Account deletion and sign out.
+
+---
+
+## 10. Socket.IO Real-Time Event Protocol
+
+Every socket connection authenticates during the handshake via `socket.handshake.auth.token`.
+
+| Event Name | Direction | Payload | Description |
+| :--- | :---: | :--- | :--- |
+| `room:join` | Client ➔ Server | `{ room: string }` | Verifies membership and joins channel/conversation room |
+| `chat:send` | Client ➔ Server | `{ room, message, type, replyTo, attachments, idempotencyKey }` | Persists message to MongoDB and broadcasts |
+| `chat:receive` | Server ➔ Room | Full `Message` Object | Delivers message to all participants in real time |
+| `typing:start` | Client ➔ Server | `{ room: string }` | Triggers typing indicator |
+| `typing:stop` | Client ➔ Server | `{ room: string }` | Cancels typing indicator |
+| `typing:update` | Server ➔ Room | `{ username, isTyping, room }` | Emits typing state to conversation participants |
+| `reaction:toggle`| Client ➔ Server | `{ messageId, emoji }` | Toggles emoji reaction in MongoDB |
+| `reaction:update`| Server ➔ Room | `{ messageId, reactions }` | Broadcasts aggregated reaction counts to room |
+| `presence:update`| Server ➔ Global | `{ users: [...] }` | Broadcasts online user roster changes |
+| `user:profile_updated` | Server ➔ Global | `{ userId, displayName, avatar }` | Broadcasts avatar/profile changes to all active clients |
+| `notification:new`| Server ➔ User | Full `Notification` Object | Delivers private in-app notification to `user:<id>` |
+
+---
+
+## 11. HTTP REST API Reference
+
+All protected endpoints require `Authorization: Bearer <token>` or HTTP-only cookie.
+
+### Authentication (`/api/auth`)
+- `POST /register`: Register new account `{ username, displayName, email, password }`
+- `POST /login`: Authenticate `{ identifier, password }`
+- `POST /logout`: Clear session
+- `GET /me`: Get authenticated user profile
+- `PATCH /profile`: Update `{ displayName, statusMessage, theme }`
+- `POST /change-password`: Update password `{ currentPassword, newPassword }`
+
+### Users & Avatars (`/api/users`)
+- `POST /avatar`: Upload profile picture (Multipart JPEG/PNG/WebP, 5MB limit)
+- `DELETE /avatar`: Remove profile picture and revert to initial
+- `GET /search?q=`: Search users by name or username
+- `POST /upload`: Multipart form file upload (25MB limit)
+
+### Conversations (`/api/conversations`)
+- `GET /`: List all conversations with last message and unread counts
+- `POST /direct`: Find or create direct message conversation `{ recipientId }`
+- `POST /group`: Create private group `{ name, description?, memberIds? }`
+- `POST /join`: Join group by invite code `{ code }`
+- `GET /:id`: Get conversation metadata and members roster
+- `GET /:id/media`: Retrieve image attachments shared in conversation
+- `GET /:id/links`: Extract shared URLs and domains from conversation
+- `GET /:id/docs`: Retrieve document attachments shared in conversation
+- `POST /:id/leave`: Leave private group
+- `POST /:id/archive`: Toggle archived status
+- `POST /:id/mute`: Toggle muted notification status
+
+### Messages (`/api`)
+- `GET /conversations/:id/messages?before=&limit=30`: Cursor-based message history
+- `POST /conversations/:id/messages`: Post message `{ content, type?, replyTo?, attachments?, idempotencyKey? }`
+- `PATCH /messages/:id`: Edit message content (author only)
+- `DELETE /messages/:id`: Soft delete message (author or admin)
+- `POST /messages/:id/reactions`: Toggle emoji reaction `{ emoji }`
+- `POST /messages/:id/pin`: Toggle message pin state
+
+### AI Assistant (`/api/ai`)
+- `POST /chat`: Multi-turn conversational AI assistance `{ message, history }`
+- `POST /summarize`: Structured conversation catch-up digest `{ conversationId, scope: 'recent-24h' | 'last-50' | 'all-unread' }`
+
+---
+
+## 12. Local Development & Setup Guide
+
+### Prerequisites
+- **Node.js**: v20.0.0 or higher
+- **MongoDB**: v6.0 or higher running on `mongodb://127.0.0.1:27017`
+
+### Environment Variables
+Create `.env` in the `server` directory (or use `.env.example`):
+```env
+PORT=5000
+NODE_ENV=development
+CLIENT_ORIGIN=http://localhost:5173
+MONGODB_URI=mongodb://127.0.0.1:27017/pulsechat
+JWT_SECRET=pulsechat_dev_super_secret_jwt_key_change_in_production
+JWT_EXPIRES_IN=7d
+UPLOAD_DIR=uploads
+MAX_FILE_SIZE=26214400
+GEMINI_API_KEY=your_optional_gemini_api_key_here
+```
+
+### Installation & Running Locally
+```bash
+# 1. Install dependencies for root, server, and client
+npm run install:all
+
+# 2. Run both server and client concurrently
+npm run dev
+
+# Backend runs on: http://localhost:5000
+# Frontend runs on: http://localhost:5173
+```
+
+---
+
+## 13. Testing & Quality Verification
+
+Run the comprehensive test suite and production builds:
+
+```bash
+# Run all unit and integration tests (Server & Client)
+npm test
+
+# Run production build (Server TypeScript + Client Vite bundle)
+npm run build
+```
+
+### Verified Test Results
+- **Server Test Suite**: 3 test files, 16 tests passed (`auth.test.ts`, `conversation.test.ts`, `features.test.ts`).
+- **Client Test Suite**: 3 test files, 10 tests passed (`Avatar.test.tsx`, `Button.test.tsx`, `ThemeContext.test.tsx`).
+- **Total**: 26 automated tests passing with 0 failures.
+- **Production Build**: 0 errors, 0 warnings.
+>>>>>>> c3cfc63 (main)
 
 - Real-time typing status
 - Typing indicators are visible only to users in the same conversation
 - Typing automatically stops when the user stops typing
 
+<<<<<<< HEAD
 ### 🔒 Direct Messaging
 
 Users can send private messages directly to another online user.
@@ -499,3 +840,12 @@ This project demonstrates practical implementation of:
 ## 📄 License
 
 This project was created for educational and academic purposes.
+=======
+## 14. Security & Privacy Architecture
+
+- **No Secrets in Frontend**: Secrets and API keys remain strictly on the backend.
+- **Sanitized AI Prompts**: Only authorized messages from the requested conversation are analyzed.
+- **Input Validation**: All payloads validated with Zod schemas.
+- **Multer Upload Sanitization**: Mime-type whitelisting and size limits prevent arbitrary file upload vulnerabilities.
+- **Granular Room Authorization**: Socket.IO join events verify membership before emitting real-time messages.
+>>>>>>> c3cfc63 (main)
