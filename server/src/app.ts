@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import { config } from './config/env.js';
@@ -40,7 +41,19 @@ export function createApp(): Express {
 
   // Static uploads directory
   const uploadsPath = path.resolve(process.cwd(), config.uploadDir);
-  app.use('/uploads', express.static(uploadsPath));
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+  app.use(
+    '/uploads',
+    express.static(uploadsPath, {
+      maxAge: '7d',
+      setHeaders: (res) => {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      },
+    })
+  );
 
   // Rate Limiting on Authentication
   const authLimiter = rateLimit({

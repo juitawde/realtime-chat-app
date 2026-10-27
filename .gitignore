@@ -25,9 +25,12 @@ pnpm-debug.log*
 lerna-debug.log*
 *.log
 
-# Uploads
-uploads/
-!uploads/.gitkeep
+# Uploads (Only ignore root /uploads, allow client/public/uploads and server/uploads assets)
+/uploads/
+!client/public/uploads/
+!client/public/uploads/**
+!server/uploads/
+!server/uploads/**
 
 # OS generated files
 .DS_Store

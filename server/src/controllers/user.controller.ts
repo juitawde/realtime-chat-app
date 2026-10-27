@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { Response } from 'express';
 import { User } from '../models/User.js';
 import { Block } from '../models/Block.js';
@@ -105,7 +106,16 @@ export async function updateAvatar(req: AuthenticatedRequest, res: Response): Pr
       return;
     }
     const userId = req.user!.id;
-    const fileUrl = `/uploads/${req.file.filename}`;
+    let fileUrl = `/uploads/${req.file.filename}`;
+    if (req.file.path && fs.existsSync(req.file.path) && req.file.size < 3 * 1024 * 1024) {
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const mime = req.file.mimetype || 'image/jpeg';
+        fileUrl = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+      } catch {
+        fileUrl = `/uploads/${req.file.filename}`;
+      }
+    }
     const user = await User.findByIdAndUpdate(userId, { avatar: fileUrl }, { new: true }).select('-passwordHash');
     if (!user) {
       res.status(404).json({ error: 'User not found.' });
