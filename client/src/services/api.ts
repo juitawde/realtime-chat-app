@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { User, Conversation, Message, NotificationItem } from '../types/index.js';
 
+const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_URL,
   withCredentials: true,
 });
 

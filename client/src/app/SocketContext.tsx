@@ -43,12 +43,16 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const newSocket = io({
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-    });
+    
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+
+const newSocket = io(SOCKET_URL || undefined, {
+  auth: { token },
+  transports: ['websocket', 'polling'],
+  reconnectionAttempts: 10,
+  reconnectionDelay: 1000,
+});
+
 
     socketRef.current = newSocket;
     setSocket(newSocket);
