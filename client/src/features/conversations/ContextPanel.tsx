@@ -6,6 +6,7 @@ import { useToast } from '../../components/ui/Toast.js';
 import { Avatar } from '../../components/ui/Avatar.js';
 import { Badge } from '../../components/ui/Badge.js';
 import { formatChannelName } from '../../utils/format.js';
+import { resolveMediaUrl } from '../../utils/media.js';
 import {
   X,
   Copy,
@@ -617,8 +618,10 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
                     }}
                   >
                     <img
-                      src={item.url}
+                      src={resolveMediaUrl(item.url)}
                       alt={item.name}
+                      loading="lazy"
+                      crossOrigin="anonymous"
                       style={{
                         width: '100%',
                         height: '100%',
@@ -850,7 +853,7 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
                     </div>
 
                     <a
-                      href={doc.url}
+                      href={resolveMediaUrl(doc.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       download={doc.name}
@@ -924,8 +927,9 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
               <X size={18} />
             </button>
             <img
-              src={previewMediaUrl}
+              src={resolveMediaUrl(previewMediaUrl)}
               alt="Media Preview"
+              crossOrigin="anonymous"
               style={{
                 maxWidth: '100%',
                 maxHeight: '85vh',

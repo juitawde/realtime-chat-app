@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { conversationService } from '../../services/api.js';
 import { Avatar } from '../../components/ui/Avatar.js';
+import { resolveMediaUrl } from '../../utils/media.js';
 import {
   Search,
   X,
@@ -403,7 +404,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     {results.files.map((f) => (
                       <a
                         key={f.id}
-                        href={f.url}
+                        href={resolveMediaUrl(f.url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         download={f.name}

@@ -1,7 +1,18 @@
 import axios from 'axios';
 import { User, Conversation, Message, NotificationItem } from '../types/index.js';
 
-const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+const getApiBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || !window.location.hostname.includes('localhost'))) {
+    return 'https://chatterly-ql6l.onrender.com/api';
+  }
+  return '/api';
+};
+
+const API_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_URL,

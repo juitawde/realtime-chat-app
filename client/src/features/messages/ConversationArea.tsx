@@ -6,6 +6,7 @@ import { useToast } from '../../components/ui/Toast.js';
 import { messageService, userService } from '../../services/api.js';
 import { Avatar } from '../../components/ui/Avatar.js';
 import { formatChannelName } from '../../utils/format.js';
+import { resolveMediaUrl } from '../../utils/media.js';
 import {
   Hash,
   Users,
@@ -572,10 +573,12 @@ export const ConversationArea: React.FC<ConversationAreaProps> = ({
                         {msg.attachments.map((att, idx) => (
                           <div key={idx}>
                             {att.mimeType.startsWith('image/') ? (
-                              <a href={att.url} target="_blank" rel="noopener noreferrer">
+                              <a href={resolveMediaUrl(att.url)} target="_blank" rel="noopener noreferrer">
                                 <img
-                                  src={att.url}
+                                  src={resolveMediaUrl(att.url)}
                                   alt={att.name}
+                                  loading="lazy"
+                                  crossOrigin="anonymous"
                                   style={{
                                     maxWidth: '260px',
                                     maxHeight: '200px',
@@ -587,7 +590,7 @@ export const ConversationArea: React.FC<ConversationAreaProps> = ({
                               </a>
                             ) : (
                               <a
-                                href={att.url}
+                                href={resolveMediaUrl(att.url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 download={att.name}

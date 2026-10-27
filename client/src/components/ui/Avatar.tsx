@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { resolveMediaUrl, isAvatarImage } from '../../utils/media.js';
 
 export interface AvatarProps {
   name: string;
@@ -10,48 +10,6 @@ export interface AvatarProps {
   className?: string;
   onClick?: () => void;
 }
-
-/**
- * Resolves avatar URLs so uploaded images load from the backend
- * instead of being requested from the Vercel frontend domain.
- */
-const getAvatarImageUrl = (url?: string | null): string => {
-  if (!url) return '';
-
-  const trimmedUrl = url.trim();
-
-  if (!trimmedUrl) return '';
-
-  // Preserve absolute and externally hosted image URLs.
-  if (/^https?:\/\//i.test(trimmedUrl)) {
-    return trimmedUrl;
-  }
-
-  // Preserve browser-generated and embedded image URLs.
-  if (
-    trimmedUrl.startsWith('data:') ||
-    trimmedUrl.startsWith('blob:')
-  ) {
-    return trimmedUrl;
-  }
-
-  const apiUrl = (
-    import.meta.env.VITE_API_URL || '/api'
-  ).replace(/\/+$/, '');
-
-  // In local development, relative URLs are expected to be
-  // served by the local backend or configured development proxy.
-  if (apiUrl.startsWith('/')) {
-    return trimmedUrl;
-  }
-
-  // VITE_API_URL is expected to end in /api.
-  // Remove that suffix to get the backend origin.
-  const backendUrl = apiUrl.replace(/\/api$/i, '');
-
-  // Handle paths both with and without a leading slash.
-  return `${backendUrl}/${trimmedUrl.replace(/^\/+/, '')}`;
-};
 
 export const Avatar: React.FC<AvatarProps> = ({
   name,
@@ -64,7 +22,9 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
 
-  const resolvedUrl = getAvatarImageUrl(src || avatarUrl);
+  const rawUrl = src || avatarUrl;
+  const isImage = isAvatarImage(rawUrl);
+  const resolvedUrl = isImage ? resolveMediaUrl(rawUrl) : '';
 
   const sizeMap = {
     xs: { dim: 24, fontSize: '11px', dot: 6 },
@@ -78,40 +38,22 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   // Use the first letter of the display name or username.
   const cleanName = (name || '').trim();
-  const initial = cleanName
-    ? cleanName.charAt(0).toUpperCase()
-    : '?';
+  const initial = cleanName ? cleanName.charAt(0).toUpperCase() : '?';
 
   // Generate a consistent tint based on the user's name.
   const charCode = cleanName
-    ? cleanName.charCodeAt(0) +
-      (cleanName.charCodeAt(cleanName.length - 1) || 0)
+    ? cleanName.charCodeAt(0) + (cleanName.charCodeAt(cleanName.length - 1) || 0)
     : 0;
 
   const tints = [
-    {
-      bg: 'var(--brand-primary)',
-      text: 'var(--text-on-primary)',
-    },
-    {
-      bg: 'var(--color-steel-blue)',
-      text: '#FFFFFF',
-    },
-    {
-      bg: 'var(--brand-secondary)',
-      text: '#FFFFFF',
-    },
-    {
-      bg: 'var(--color-strong-cyan)',
-      text: '#FFFFFF',
-    },
+    { bg: 'var(--brand-primary)', text: 'var(--text-on-primary)' },
+    { bg: 'var(--color-steel-blue)', text: '#FFFFFF' },
+    { bg: 'var(--brand-secondary)', text: '#FFFFFF' },
+    { bg: 'var(--color-strong-cyan)', text: '#FFFFFF' },
   ];
 
   const tint = tints[charCode % tints.length];
-
-  const hasValidImage = Boolean(
-    resolvedUrl && !imageError
-  );
+  const hasValidImage = Boolean(resolvedUrl && !imageError);
 
   return (
     <div
@@ -125,9 +67,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: hasValidImage
-          ? 'transparent'
-          : tint.bg,
+        backgroundColor: hasValidImage ? 'transparent' : tint.bg,
         color: tint.text,
         fontWeight: 600,
         fontSize,
@@ -143,6 +83,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         <img
           src={resolvedUrl}
           alt={cleanName || 'User avatar'}
+          crossOrigin="anonymous"
           onError={() => setImageError(true)}
           style={{
             width: '100%',
@@ -166,9 +107,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             width: `${dot}px`,
             height: `${dot}px`,
             borderRadius: '50%',
-            backgroundColor: isOnline
-              ? 'var(--status-online)'
-              : 'var(--text-muted)',
+            backgroundColor: isOnline ? 'var(--status-online)' : 'var(--text-muted)',
             border: '2px solid var(--bg-panel)',
             zIndex: 2,
           }}

@@ -11,6 +11,16 @@ export function isOriginAllowed(origin: string | undefined): boolean {
     return true;
   }
 
+  // Support Vercel production and preview deployments
+  if (origin === 'https://chatterly-self.vercel.app' || origin.endsWith('.vercel.app')) {
+    return true;
+  }
+
+  // Support Render production and PR preview subdomains
+  if (origin.endsWith('.onrender.com')) {
+    return true;
+  }
+
   return false;
 }
 

@@ -3,6 +3,7 @@ import { useAuth } from '../../app/AuthContext.js';
 import { aiService, userService } from '../../services/api.js';
 import { useToast } from '../../components/ui/Toast.js';
 import { Avatar } from '../../components/ui/Avatar.js';
+import { resolveMediaUrl } from '../../utils/media.js';
 import {
   Send,
   RotateCcw,
@@ -652,8 +653,10 @@ export const PulseAIWorkspace: React.FC = () => {
                       {msg.attachment.mimeType?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(msg.attachment.name) ? (
                         <div style={{ marginBottom: '8px', borderRadius: 'var(--radius-md)', overflow: 'hidden', maxHeight: '220px' }}>
                           <img
-                            src={msg.attachment.url}
+                            src={resolveMediaUrl(msg.attachment.url)}
                             alt={msg.attachment.name}
+                            loading="lazy"
+                            crossOrigin="anonymous"
                             style={{ maxWidth: '100%', maxHeight: '220px', objectFit: 'contain', display: 'block', borderRadius: 'var(--radius-md)' }}
                           />
                         </div>
@@ -693,7 +696,7 @@ export const PulseAIWorkspace: React.FC = () => {
                           </div>
                         </div>
                         <a
-                          href={msg.attachment.url}
+                          href={resolveMediaUrl(msg.attachment.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           download={msg.attachment.name}

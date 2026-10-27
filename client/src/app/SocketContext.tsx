@@ -43,15 +43,30 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+    const getSocketUrl = (): string | undefined => {
+      const envSocket = import.meta.env.VITE_SOCKET_URL;
+      if (envSocket && envSocket.trim()) return envSocket.trim();
 
-const newSocket = io(SOCKET_URL || undefined, {
-  auth: { token },
-  transports: ['websocket', 'polling'],
-  reconnectionAttempts: 10,
-  reconnectionDelay: 1000,
-});
+      const envApi = import.meta.env.VITE_API_URL;
+      if (envApi && /^https?:\/\//i.test(envApi)) {
+        return envApi.replace(/\/api\/?$/i, '').replace(/\/+$/, '');
+      }
+
+      if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || !window.location.hostname.includes('localhost'))) {
+        return 'https://chatterly-ql6l.onrender.com';
+      }
+
+      return undefined;
+    };
+
+    const SOCKET_URL = getSocketUrl();
+
+    const newSocket = io(SOCKET_URL || undefined, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+    });
 
 
     socketRef.current = newSocket;
