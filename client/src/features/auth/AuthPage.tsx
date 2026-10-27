@@ -81,7 +81,7 @@ export const AuthPage: React.FC = () => {
       {/* WHOLE LEFT SIDEBAR OCCUPIED WITH USER SUPPLIED POSTER IMAGE */}
       <div className="auth-left-sidebar">
         <img
-          src="/auth-sidebar.jpg"
+          src="/Chatterly.png"
           alt="Chatterly Platform"
         />
       </div>
