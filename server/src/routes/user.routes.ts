@@ -12,13 +12,13 @@ import {
 } from '../controllers/user.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 
+import { ensureUploadDirExists, saveAttachment, safelyRemoveFile } from '../services/storage.service.js';
+import { config } from '../config/env.js';
+
 const router = Router();
 
-// Configure Multer for attachments
-const uploadDir = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configure Multer storage using canonical upload directory
+const uploadDir = ensureUploadDirExists();
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
@@ -56,19 +56,24 @@ router.post('/:id/block', blockUser);
 router.delete('/:id/block', unblockUser);
 router.get('/blocked', getBlockedUsers);
 
-router.post('/upload', uploadAttachment.single('file'), (req: Request, res: Response) => {
+router.post('/upload', uploadAttachment.single('file'), async (req: Request, res: Response) => {
   if (!req.file) {
     res.status(400).json({ error: 'No file uploaded.' });
     return;
   }
 
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({
-    name: req.file.originalname,
-    url: fileUrl,
-    size: req.file.size,
-    mimeType: req.file.mimetype,
-  });
+  try {
+    const saved = await saveAttachment(req.file);
+    res.json({
+      name: req.file.originalname,
+      url: saved.url,
+      size: req.file.size,
+      mimeType: req.file.mimetype,
+    });
+  } catch (error) {
+    safelyRemoveFile(req.file?.path);
+    res.status(500).json({ error: 'Failed to process uploaded file.' });
+  }
 });
 
 export default router;

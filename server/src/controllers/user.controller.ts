@@ -4,6 +4,7 @@ import { User } from '../models/User.js';
 import { Block } from '../models/Block.js';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import { broadcastUserProfileUpdate } from '../sockets/index.js';
+import { saveAvatar, cleanupOldAvatar, safelyRemoveFile } from '../services/storage.service.js';
 
 export async function searchUsers(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
@@ -105,38 +106,45 @@ export async function updateAvatar(req: AuthenticatedRequest, res: Response): Pr
       res.status(400).json({ error: 'Please select an image file to upload.' });
       return;
     }
+
     const userId = req.user!.id;
-    let fileUrl = `/uploads/${req.file.filename}`;
-    if (req.file.path && fs.existsSync(req.file.path) && req.file.size < 3 * 1024 * 1024) {
-      try {
-        const fileBuffer = fs.readFileSync(req.file.path);
-        const mime = req.file.mimetype || 'image/jpeg';
-        fileUrl = `data:${mime};base64,${fileBuffer.toString('base64')}`;
-      } catch {
-        fileUrl = `/uploads/${req.file.filename}`;
-      }
-    }
-    const user = await User.findByIdAndUpdate(userId, { avatar: fileUrl }, { new: true }).select('-passwordHash');
-    if (!user) {
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      safelyRemoveFile(req.file.path);
       res.status(404).json({ error: 'User not found.' });
       return;
     }
-    broadcastUserProfileUpdate({ userId, displayName: user.displayName, avatar: user.avatar });
+
+    const oldAvatar = currentUser.avatar;
+    const saved = await saveAvatar(req.file);
+    const newAvatarUrl = saved.url;
+
+    currentUser.avatar = newAvatarUrl;
+    await currentUser.save();
+
+    // Safely cleanup old avatar only if it is no longer referenced
+    if (oldAvatar && oldAvatar !== newAvatarUrl) {
+      await cleanupOldAvatar(oldAvatar, userId);
+    }
+
+    broadcastUserProfileUpdate({ userId, displayName: currentUser.displayName, avatar: currentUser.avatar });
+
     res.json({
       message: 'Profile picture updated successfully.',
-      avatarUrl: fileUrl,
+      avatarUrl: newAvatarUrl,
       user: {
-        id: user._id,
-        username: user.username,
-        displayName: user.displayName,
-        email: user.email,
-        avatar: user.avatar,
-        statusMessage: user.statusMessage,
-        role: user.role,
-        preferences: user.preferences,
+        id: currentUser._id,
+        username: currentUser.username,
+        displayName: currentUser.displayName,
+        email: currentUser.email,
+        avatar: currentUser.avatar,
+        statusMessage: currentUser.statusMessage,
+        role: currentUser.role,
+        preferences: currentUser.preferences,
       },
     });
   } catch (error) {
+    safelyRemoveFile(req.file?.path);
     res.status(500).json({ error: 'Failed to update profile picture.' });
   }
 }
@@ -144,12 +152,22 @@ export async function updateAvatar(req: AuthenticatedRequest, res: Response): Pr
 export async function removeAvatar(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const userId = req.user!.id;
-    const user = await User.findByIdAndUpdate(userId, { avatar: '' }, { new: true }).select('-passwordHash');
+    const user = await User.findById(userId);
     if (!user) {
       res.status(404).json({ error: 'User not found.' });
       return;
     }
+
+    const oldAvatar = user.avatar;
+    user.avatar = '';
+    await user.save();
+
+    if (oldAvatar) {
+      await cleanupOldAvatar(oldAvatar, userId);
+    }
+
     broadcastUserProfileUpdate({ userId, displayName: user.displayName, avatar: '' });
+
     res.json({
       message: 'Profile picture removed. Reverted to initial avatar.',
       user: {

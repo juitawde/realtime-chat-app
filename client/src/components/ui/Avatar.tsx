@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { resolveMediaUrl, isAvatarImage } from '../../utils/media.js';
 
 export interface AvatarProps {
@@ -25,6 +25,10 @@ export const Avatar: React.FC<AvatarProps> = ({
   const rawUrl = src || avatarUrl;
   const isImage = isAvatarImage(rawUrl);
   const resolvedUrl = isImage ? resolveMediaUrl(rawUrl) : '';
+
+  useEffect(() => {
+    setImageError(false);
+  }, [rawUrl]);
 
   const sizeMap = {
     xs: { dim: 24, fontSize: '11px', dot: 6 },

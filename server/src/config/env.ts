@@ -41,6 +41,22 @@ const allowedOrigins = Array.from(new Set([
   ...defaultDevOrigins,
 ]));
 
+import fs from 'fs';
+
+function resolveUploadDir(): string {
+  if (process.env.UPLOAD_DIR) {
+    return path.resolve(process.cwd(), process.env.UPLOAD_DIR);
+  }
+  const serverUploads = path.resolve(process.cwd(), 'server', 'uploads');
+  if (fs.existsSync(serverUploads)) {
+    return serverUploads;
+  }
+  if (process.cwd().endsWith('server')) {
+    return path.resolve(process.cwd(), 'uploads');
+  }
+  return path.resolve(process.cwd(), 'uploads');
+}
+
 export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -51,5 +67,15 @@ export const config = {
   allowedOrigins,
   aiApiKey: process.env.GEMINI_API_KEY || process.env.AI_API_KEY || '',
   geminiModel: process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
-  uploadDir: process.env.UPLOAD_DIR || 'uploads',
+  uploadDir: resolveUploadDir(),
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+    url: process.env.CLOUDINARY_URL || '',
+    isConfigured: Boolean(
+      process.env.CLOUDINARY_URL ||
+      (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+    ),
+  },
 };

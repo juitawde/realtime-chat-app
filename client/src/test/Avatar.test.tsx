@@ -13,11 +13,31 @@ describe('Shared Avatar Component', () => {
     expect(screen.getByText('R')).toBeInTheDocument();
   });
 
+  it('renders initial without loading broken image when avatar is a single-letter badge', () => {
+    render(<Avatar name="Aarav Sharma" src="A" size="md" />);
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).toBeNull();
+  });
+
+  it('handles missing, null, or undefined avatar values cleanly', () => {
+    render(<Avatar name="Neha Gupta" src={null} avatarUrl={undefined} size="md" />);
+    expect(screen.getByText('N')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).toBeNull();
+  });
+
   it('renders image when src is valid and does not show initial simultaneously', () => {
     render(<Avatar name="Jui Tawde" src="https://example.com/avatar.jpg" size="md" />);
     const img = screen.getByRole('img');
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', 'https://example.com/avatar.jpg');
+    expect(screen.queryByText('J')).toBeNull();
+  });
+
+  it('renders image for relative /uploads/... paths resolved by resolveMediaUrl', () => {
+    render(<Avatar name="Jui Tawde" src="/uploads/avatar-123.jpg" size="md" />);
+    const img = screen.getByRole('img');
+    expect(img).toBeInTheDocument();
+    expect(img.getAttribute('src')).toContain('avatar-123.jpg');
     expect(screen.queryByText('J')).toBeNull();
   });
 
