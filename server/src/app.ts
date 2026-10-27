@@ -11,6 +11,7 @@ import { config } from './config/env.js';
 import { corsOptions } from './config/cors.js';
 import { getDatabaseStatus } from './config/database.js';
 import { errorHandler } from './middleware/error.middleware.js';
+import { serveMediaFromGridFS } from './services/storage.service.js';
 
 import authRoutes from './routes/auth.routes.js';
 import conversationRoutes from './routes/conversation.routes.js';
@@ -39,11 +40,22 @@ export function createApp(): Express {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   app.use(cookieParser());
 
-  // Static uploads directory
+  // Static uploads directory with MongoDB GridFS persistent fallback
   const uploadsPath = path.resolve(process.cwd(), config.uploadDir);
   if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
   }
+
+  const handleMediaFallback = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const rawParam = req.params.filename;
+    const filename = (Array.isArray(rawParam) ? rawParam[0] : rawParam) || req.path.replace(/^\/+/, '');
+    if (!filename || typeof filename !== 'string') return next();
+    const served = await serveMediaFromGridFS(filename, req, res);
+    if (!served) {
+      res.status(404).json({ error: 'Media file not found' });
+    }
+  };
+
   app.use(
     '/uploads',
     express.static(uploadsPath, {
@@ -52,8 +64,12 @@ export function createApp(): Express {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       },
-    })
+    }),
+    handleMediaFallback
   );
+
+  app.get('/api/media/:filename', handleMediaFallback);
+  app.get('/api/uploads/:filename', handleMediaFallback);
 
   // Rate Limiting on Authentication
   const authLimiter = rateLimit({

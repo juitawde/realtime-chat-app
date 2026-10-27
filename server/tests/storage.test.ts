@@ -111,4 +111,32 @@ describe('Storage & Profile Image Management API', () => {
     const dbUser = await User.findById(userId);
     expect(dbUser?.avatar).toBe('');
   });
+
+  it('persists uploaded image in GridFS and serves it with 200 even after local disk file is wiped', async () => {
+    // 1. Upload a new avatar
+    const res = await request(app)
+      .post('/api/users/avatar')
+      .set('Authorization', `Bearer ${authToken}`)
+      .attach('avatar', dummyImagePath);
+
+    expect(res.status).toBe(200);
+    const avatarUrl = res.body.avatarUrl;
+    expect(avatarUrl).toMatch(/^\/uploads\//);
+
+    const filename = path.basename(avatarUrl);
+    const localDiskPath = path.resolve(config.uploadDir, filename);
+
+    // 2. SIMULATE RENDER EPHEMERAL WIPE: Delete the file from local disk
+    if (fs.existsSync(localDiskPath)) {
+      fs.unlinkSync(localDiskPath);
+    }
+    expect(fs.existsSync(localDiskPath)).toBe(false);
+
+    // 3. Request the image via GET /uploads/:filename
+    const fetchRes = await request(app).get(`/uploads/${filename}`);
+    expect(fetchRes.status).toBe(200);
+    expect(fetchRes.headers['content-type']).toMatch(/image\/(jpeg|jpg)/);
+    expect(fetchRes.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+    expect(fetchRes.body.length).toBeGreaterThan(0);
+  });
 });

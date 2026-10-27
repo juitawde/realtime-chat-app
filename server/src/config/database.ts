@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { config } from './env.js';
 import { logger } from '../utils/logger.js';
 import { Conversation } from '../models/Conversation.js';
+import { syncDiskFilesToGridFS } from '../services/storage.service.js';
 
 export const PUBLIC_CHANNELS = [
   { name: 'General', description: 'General community discussion and catch-up.' },
@@ -118,5 +119,12 @@ export async function connectDB(): Promise<void> {
     } catch (e: any) {
       logger.warn({ err: e.message }, `Channel check for #${channel.name} encountered an issue`);
     }
+  }
+
+  // Automatically sync any existing local disk uploads into persistent MongoDB GridFS
+  try {
+    await syncDiskFilesToGridFS();
+  } catch (syncErr: any) {
+    logger.warn({ err: syncErr.message }, 'Initial GridFS disk sync encountered an issue');
   }
 }
