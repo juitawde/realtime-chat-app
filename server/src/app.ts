@@ -46,11 +46,27 @@ export function createApp(): Express {
     fs.mkdirSync(uploadsPath, { recursive: true });
   }
 
-  const handleMediaFallback = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const handleMediaRequest = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const rawParam = req.params.filename;
     const filename = (Array.isArray(rawParam) ? rawParam[0] : rawParam) || req.path.replace(/^\/+/, '');
     if (!filename || typeof filename !== 'string') return next();
-    const served = await serveMediaFromGridFS(filename, req, res);
+
+    const safeFilename = path.basename(filename);
+
+    // 1. If cached on local disk, serve directly
+    const localPath = path.resolve(config.uploadDir, safeFilename);
+    if (fs.existsSync(localPath)) {
+      return res.sendFile(localPath, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
+    }
+
+    // 2. Otherwise stream from persistent MongoDB GridFS
+    const served = await serveMediaFromGridFS(safeFilename, req, res);
     if (!served) {
       res.status(404).json({ error: 'Media file not found' });
     }
@@ -64,12 +80,12 @@ export function createApp(): Express {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       },
-    }),
-    handleMediaFallback
+    })
   );
 
-  app.get('/api/media/:filename', handleMediaFallback);
-  app.get('/api/uploads/:filename', handleMediaFallback);
+  app.get('/uploads/:filename', handleMediaRequest);
+  app.get('/api/media/:filename', handleMediaRequest);
+  app.get('/api/uploads/:filename', handleMediaRequest);
 
   // Rate Limiting on Authentication
   const authLimiter = rateLimit({

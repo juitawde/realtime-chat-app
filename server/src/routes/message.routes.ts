@@ -17,13 +17,11 @@ import {
 
 const router = Router();
 
-router.use(authenticate);
-
-router.get('/conversations/:id/messages', getMessages);
-router.post('/conversations/:id/messages', validateBody(sendMessageSchema), sendMessage);
-router.patch('/messages/:id', validateBody(editMessageSchema), editMessage);
-router.delete('/messages/:id', deleteMessage);
-router.post('/messages/:id/reactions', validateBody(addReactionSchema), toggleReaction);
-router.post('/messages/:id/pin', togglePin);
+router.get('/conversations/:id/messages', authenticate, getMessages);
+router.post('/conversations/:id/messages', authenticate, validateBody(sendMessageSchema), sendMessage);
+router.patch('/messages/:id', authenticate, validateBody(editMessageSchema), editMessage);
+router.delete('/messages/:id', authenticate, deleteMessage);
+router.post('/messages/:id/reactions', authenticate, validateBody(addReactionSchema), toggleReaction);
+router.post('/messages/:id/pin', authenticate, togglePin);
 
 export default router;
